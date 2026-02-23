@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valuation | Premium Car Predictor</title>
+    <style>
+        /* Porsche-inspired Aesthetic with Image Background */
+        :root {
+            --card-bg: rgba(20, 20, 20, 0.85); /* Semi-transparent dark card */
+            --text-color: #ffffff;
+            --accent-color: #d5001c; /* Porsche Red */
+            --input-bg: #2b2b2b;
+            --border-color: #555;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* BACKGROUND IMAGE CONFIGURATION */
+            /* Make sure 'car_bg.jpg' is inside the 'static' folder */
+            background: url("{{ url_for('static', filename='car_bg.jpg') }}") no-repeat center center fixed; 
+            background-size: cover;
+        }
+
+        /* Dark overlay on top of the image so text is readable */
+        .bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6); /* Adjust opacity (0.6) to make darker/lighter */
+            z-index: -1;
+        }
+
+        .main-container {
+            /* Glassmorphism effect */
+            background-color: var(--card-bg);
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            
+            width: 100%;
+            max-width: 950px;
+            display: grid;
+            grid-template-columns: 2fr 3fr; /* Left side smaller than right side */
+            gap: 40px;
+            padding: 50px;
+            border-radius: 8px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            margin: 20px;
+        }
+
+        /* Left Side: Header */
+        .header-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding-right: 30px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+            color: white;
+        }
+
+        p.subtitle {
+            color: #ccc;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .prediction-box {
+            padding: 25px;
+            background: linear-gradient(135deg, var(--accent-color), #990014);
+            border-radius: 4px;
+            box-shadow: 0 10px 20px rgba(213, 0, 28, 0.3);
+        }
+
+        .prediction-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 10px;
+        }
+
+        .prediction-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        /* Right Side: Form */
+        form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            align-content: center;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+            color: #ddd;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 14px;
+            font-size: 1rem;
+            border-radius: 4px;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+            background-color: #333;
+            box-shadow: 0 0 10px rgba(213, 0, 28, 0.2);
+        }
+
+        /* THE SUBMIT BUTTON */
+        .submit-btn {
+            grid-column: span 2;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            font-weight: 700;
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .submit-btn:hover {
+            background-color: #ff1a3c;
+            box-shadow: 0 10px 25px rgba(213, 0, 28, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 850px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+            }
+            .header-section {
+                border-right: none;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                padding-right: 0;
+                padding-bottom: 30px;
+                margin-bottom: 30px;
+                text-align: center;
+            }
+            h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-overlay"></div>
+
+    <div class="main-container">
+        
+        <div class="header-section">
+            <div>
+                <h1>Valuation</h1>
+                <p class="subtitle">Premium Vehicle Estimates</p>
+            </div>
+            
+            {% if prediction_text and "Error" not in prediction_text %}
+            <div class="prediction-box">
+                <div class="prediction-label">Estimated Market Value</div>
+                <div class="prediction-value">{{ prediction_text }}</div>
+            </div>
+            {% elif "Error" in prediction_text %}
+             <div style="margin-top:20px; color: #ff5555; font-weight:bold;">
+                {{ prediction_text }}
+            </div>
+            {% else %}
+            <div style="margin-top:20px; color: #aaa; letter-spacing: 1px;">
+                Configure parameters to generate an estimate.
+            </div>
+            {% endif %}
+        </div>
+
+        <form action="{{ url_for('predict') }}" method="post">
+            
+            <div class="full-width">
+                <label>Present Showroom Price (Lakhs)</label>
+                <input type="number" step="0.01" name="present_price" placeholder="e.g. 12.50" required value="{{ selected_price }}">
+            </div>
+
+            <div>
+                <label>Year Model</label>
+                <select name="year" required>
+                    <option value="" disabled {% if not selected_year %}selected{% endif %}>Select</option>
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>Kilometers</label>
+                <input type="number" name="kms_driven" placeholder="e.g. 45000" required value="{{ selected_kms }}">
+            </div>
+
+            <div>
+                <label>Fuel Type</label>
+                <select name="fuel_type" required>
+                    <option value="" disabled {% if not selected_fuel %}selected{% endif %}>Select</option>
+                    {% for fuel in fuel_types %}
+                    <option value="{{ fuel }}" {% if selected_fuel == fuel %}selected{% endif %}>{{ fuel }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>Transmission</label>
+                <select name="transmission" required>
+                     <option value="" disabled {% if not selected_transmission %}selected{% endif %}>
+                        {% if transmissions|length == 0 %} Error loading CSV Data {% else %} Select {% endif %}
+                    </option>
+                    {% for trans in transmissions %}
+                    <option value="{{ trans }}" {% if selected_transmission == trans %}selected{% endif %}>{{ trans }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>Seller Type</label>
+                <select name="seller_type" required>
+                    <option value="" disabled {% if not selected_seller %}selected{% endif %}>Select</option>
+                    {% for seller in seller_types %}
+                    <option value="{{ seller }}" {% if selected_seller == seller %}selected{% endif %}>{{ seller }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label>Previous Owners</label>
+                <select name="owner" required>
+                    <option value="" disabled {% if not selected_owner %}selected{% endif %}>Select</option>
+                    {% for owner in owners %}
+                    <option value="{{ owner }}" {% if selected_owner == owner %}selected{% endif %}>{{ owner }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">Calculate Estimate</button>
+        </form>
+
+    </div>
+
+</body>
+</html>
